@@ -5,6 +5,7 @@ Example-code gstwebrtc as callee or caller
 With GStreamer 1.14 release, a WebRTC-endpoint was introduced. As the provided examples in Python handle only outgoing calls from the application to a browser, here a example how to call your application from a browser.
 Thought of usecase hereby is to call a device (e.g. Pi) at home, which has a camera attached, from my remote-browser (eg. smartphone) and to use it as securtiy-camera with audio-support. 
 
+Currently does not work with the GStreamer 1.16.2!
 # Usage
 
 ## Start signaling server
@@ -37,6 +38,7 @@ Currently the following setups have been involved in testing:
     * The outgoing video on a Pi "requires" (well not technically but it makes sense to use the HW-encoder) to use the omxh264, therefore the second endpoint is required to support h264-codec (not the case on my mobile firefox ). Otherwise no common format will be found.
     * - [ ] Bi-dirctional video+audio communition does work, however it takes a long time to establish a connection (ssl-warnings TOFIX) and the displayed the video had poor quality (lag, decoder-framedrops) - TOFIX try with low remote resolution
 * Python-application on Ubuntu 18.04
+* TOFIX Promise of 'set-remote-description' does not seem to return. Python-application unresponsive...
 
 
 
