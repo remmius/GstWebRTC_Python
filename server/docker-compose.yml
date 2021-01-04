@@ -1,0 +1,17 @@
+version: "3.3"
+services:
+    signaling-server:
+        restart: always
+        build: ./backend-server/
+        ports:
+            - "8443:8443"
+        volumes:
+            - /etc/letsencrypt/:/etc/letsencrypt/
+        env_file:
+            - signalling_server.env
+    coturn-server:
+        restart: always
+        image: "instrumentisto/coturn"
+        network_mode: host
+        volumes:
+            - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf

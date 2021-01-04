@@ -1,0 +1,26 @@
+{
+  "name": "webrtc-signalling-server",
+  "version": "0.1.0",
+  "description": "A signalling server/application for WebRTC-connection handling",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/remmius/GstWebRTC_Python.git"
+  },
+  "keywords": [
+    "gstwebrtc"
+  ],
+  "author": "remmius",
+  "license": "MIT",
+  "homepage": "https://github.com/remmius/GstWebRTC_Python.git#readme",
+  "dependencies": {
+    "ws": "^3.3.2",
+    "jsonwebtoken": "^8.5.1",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {}
+}

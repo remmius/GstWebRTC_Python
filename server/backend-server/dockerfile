@@ -1,0 +1,10 @@
+FROM node:12
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 8443
+CMD [ "npm", "start" ]
+#CMD ["/bin/sleep", "100000"]
+#docker build -t gst-webrtc-browser-server .
+#docker run --name gst-webrtc-browser-server --rm -p 8443:8443 -d -v /etc/letsencrypt/:/etc/letsencrypt/ gst-webrtc-browser-server
