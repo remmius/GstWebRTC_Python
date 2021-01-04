@@ -2,7 +2,7 @@ Example-code gstwebrtc as callee or caller
 ==============
 
 # Purpose
-With GStreamer 1.14 release, a WebRTC-endpoint was introduced. As the provided examples in Python handle only outgoing calls from the application to a browser. Here is a more flexible example allowing to act as a callee and offer different encodings in the gst-offer. 
+With GStreamer 1.14 release (this example requires 1.16+), a WebRTC-endpoint was introduced. As the provided examples in Python handle only outgoing calls from the application to a browser. Here is a more flexible example allowing to act as a callee and offer different encodings in the gst-offer. 
 Moreover there is a possibility to limit the media-direction of the gstwebrtc-client, e.g. to act as a one-way video/audio-streaming solution ("sendonly"-mode).
 Thought of usecase hereby is to call a device (e.g. Pi) at home, which has a camera attached, from my remote-browser (eg. smartphone) and to use it as securtiy-camera with audio-support. 
 
@@ -48,7 +48,7 @@ docker run -it -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY --rm --n
 
 ``` 
 
-# Used devices
+# Used/"Tested" devices
 Currently the following setups have been involved in testing:
 * Chrome and Firefox on Ubuntu 18.04
 * Chrome and Firefox on Android 7.1
@@ -56,8 +56,16 @@ Currently the following setups have been involved in testing:
 * Python-application on Pi 2 Model B v1.1 with Raspbian Buster
     * The outgoing video on a Pi "requires" (well not technically but it makes sense to use the HW-encoder) to use the omxh264, therefore the second endpoint is required to support h264-codec (not the case on my mobile firefox ). Otherwise no common format will be found.
     * - [ ] Bi-dirctional video+audio communition does work, however it takes a long time to establish a connection (ssl-warnings TOFIX) and the displayed the video had poor quality (lag, decoder-framedrops) - TOFIX try with low remote resolution
-* Python-application on Ubuntu 20.04 with gstreamer 1.16.2 and 20.10 1.18.0. The version 1.14 does not work with this code.
-
+* Python-application on Ubuntu 20.04 with gstreamer 1.16.2 and 20.10 1.18.0. The version gst-1.14 does not work with this code.
+## TO DO
+* Fix error for some combinations of limited media-support between gst-webrtc and browser/gst-webrtc
+* Improve supported codec-detection (esp. omxh264 and xh264,vp8,vp9) on sdp-offer
+* To Do: 
+    * Proper update of files
+    * Add configuration for video-resolution
+    * Add more audio-codecs 
+    * Webclient: sometimes registering does not work, remove old id when reconnecting, properly update default value for peerid on mobile-devices
+    
 # Setup-application 
 ## On host
 Install the required packages to your host-system
