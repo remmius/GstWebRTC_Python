@@ -1,0 +1,3 @@
+[submodule "Python_Gst_Webrtc_Client/h264-profile-level-id"]
+	path = Python_Gst_Webrtc_Client/h264-profile-level-id
+	url = https://github.com/skymaze/h264-profile-level-id.git

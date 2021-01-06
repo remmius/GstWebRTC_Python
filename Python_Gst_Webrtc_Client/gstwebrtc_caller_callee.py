@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Dec 22 11:38:18 2020
-
+#GST_DEBUG=3 gst-launch-1.0 -v videotestsrc is-live=true ! video/x-raw,width=120,height=80 ! videoconvert ! omxh264enc ! capsfilter caps="video/x-h264,profile=(string)baseline"  ! rtph264pay name=videopay !  fakesink
+GST_DEBUG=3 gst-launch-1.0 -v v4l2src device=/dev/video0 ! video/x-raw,width=120,height=80,framerate=30/1  ! videoconvert ! omxh264enc ! capsfilter caps="video/x-h264,profile=(string)baseline, level=(string)1" ! rtph264pay name=videopay ! fakesink
 @author: klaus
 """
 import nest_asyncio
@@ -19,13 +20,15 @@ import time
 import gi
 gi.require_version('Gst', '1.0')
 from gi.repository import Gst
+#gi.require_version('GstPbutils', '1.0')
+#from gi.repository import GstPbutils
 gi.require_version('GstWebRTC', '1.0')
 from gi.repository import GstWebRTC
 gi.require_version('GstSdp', '1.0')
 from gi.repository import GstSdp
 
 import logging as logger
-logger.basicConfig(format='%(asctime)s %(message)s',level=logger.WARNING)
+logger.basicConfig(format='%(asctime)s %(message)s',level=logger.INFO)
 
 DEFAULT_PIPELINE="realsrc_aud_vid"#'testsrc_aud_vid' #
 DEFAULT_PIPELINE='testsrc_aud_vid' 
@@ -116,7 +119,7 @@ class WebRTCClient:
             else:#typically create an sdp-offer with multiple codec-offers
                 for encoder in encoder_list[media_type]:  
                     caps0=self.pipebuilder.generate_caps(media_type,encoder,caps0)
-                   
+            print("add trans",caps0.to_string())       
             self.webrtc.emit('add-transceiver', direction, caps0)
         
     async def connect(self):

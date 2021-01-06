@@ -5,14 +5,14 @@ Created on Tue Dec 22 11:38:18 2020
 
 @author: klaus
 """
-
+import profileconverter_h264 as utilh264
 import gi
 gi.require_version('Gst', '1.0')
 from gi.repository import Gst,GLib
 import time
 
 import logging as logger
-logger.basicConfig(format='%(asctime)s %(message)s',level=logger.WARNING)
+logger.basicConfig(format='%(asctime)s %(message)s',level=logger.INFO)
 
 MEDIA_PRIO={
         "video":{"H264":3,"VP8":2,"VP9":1},
@@ -45,6 +45,13 @@ class SDPTester():
         elif(media_type=="audio"):
             source='audiotestsrc is-live=true wave=blue-noise ! audioconvert ! audioresample '             
         description_pipeline='''{source} ! {encoder} name=encoder ! {payloader} ! capsfilter caps="{caps}" ! fakesink name=fakesinktest '''.format(source=source,encoder=encoder,payloader=payloader,caps=test_caps.to_string())
+        if(encoder=="omxh264enc"):
+            #TOFIX with videotestsrc a sigsev is caused if capsomx="video/x-h264,level=(string)XX" is defined
+            #is level required to be set for encoder or enough to set before fakesink?
+            source="v4l2src device=/dev/video0 ! video/x-raw,width=120,height=80,framerate=30/1  ! videoconvert"
+            caps_omx=utilh264. get_omxcaps_from_caps(test_caps.to_string())
+            description_pipeline='''{source} ! {encoder} name=encoder ! capsfilter caps="{capsomx}" ! {payloader} ! capsfilter caps="{caps}" ! fakesink name=fakesinktest '''.format(source=source,encoder=encoder,payloader=payloader,capsomx=caps_omx,caps=test_caps.to_string())
+        print(description_pipeline)
         self.pipe = Gst.parse_launch(description_pipeline)
         self.set_encoder_to_livestream(self.pipe.get_by_name('encoder'),encoder)
 
@@ -52,6 +59,9 @@ class SDPTester():
         encoder=self.media[encoder_name]['encoder']
         payloader=self.media[encoder_name]['payloader']                   
         logger.info("Test-started for {} with encoder {} and caps {}".format(media_type,encoder_name,test_caps))
+        if(self.media[encoder_name]['encoder']=="omxh264enc"):
+            store_caps="output"
+            
         self.create_testpipeline(media_type,encoder,payloader,test_caps)       
     
         self.start_pipeline()
@@ -67,7 +77,7 @@ class SDPTester():
             if(store_caps=="output"):                
                 #create new caps with a reduced set of fields
                 cap_struc=caps.get_structure(0)  
-                for field in ['sprop-parameter-sets','timestamp-offset','seqnum-offset']:
+                for field in ['sprop-parameter-sets','timestamp-offset','seqnum-offset']:#'sprop-parameter-sets'
                     if(cap_struc.has_field(field)):                        
                         cap_struc.remove_field(field)                
                 reduced_caps=Gst.Caps.new_empty()
@@ -153,7 +163,7 @@ class PipelineBuilder():
         return self.sdptester.webrtcmedia
     
     def generate_caps(self,media_type,encoder,caps0):
-        caps_str='''application/x-rtp, payload=(int){}'''.format(self.get_media()[encoder]['pt'])
+        caps_str='''application/x-rtp, payload=(int){}'''.format(self.get_media()[encoder]['pt'])       
         capsn= Gst.caps_from_string(caps_str)
         if(self.sdptester.test_pipeline(media_type,encoder,capsn,store_caps="output")):                        
             capsn=self.get_media()[encoder]["caps"]
@@ -298,13 +308,20 @@ class PipelineBuilder():
         self.sdptester.set_encoder_to_livestream(enc,self.sdptester.media[encoder_name]['encoder'])
                   
         payloader=Gst.ElementFactory.make(self.sdptester.media[encoder_name]['payloader'],media_type+"pay")
-        payloader.set_property("pt",self.sdptester.media[encoder_name]['pt'])
+        #payloader.set_property("pt",self.sdptester.media[encoder_name]['pt'])
         
         queue=Gst.ElementFactory.make("queue",media_type+"queue")  
-        
+        print(self.sdptester.media[encoder_name]['encoder'])
+        print(self.sdptester.media[encoder_name]['caps'])        
         capsfilter = Gst.ElementFactory.make("capsfilter", media_type+"filter")
         caps=self.sdptester.media[encoder_name]['caps']        
-        capsfilter.set_property("caps", caps) 
+        capsfilter.set_property("caps", caps)
+        if(self.sdptester.media[encoder_name]['encoder']=='omxh264enc'):
+            capsfilter0 = Gst.ElementFactory.make("capsfilter", media_type+"filteromx")
+            caps_omx=utilh264. get_omxcaps_from_caps(caps.to_string())
+            caps0=Gst.Caps.from_string(caps_omx)
+            capsfilter0.set_property("caps", caps0) 
+            self.pipe.add(capsfilter0)        
         
         self.pipe.add(enc)
         self.pipe.add(payloader)
@@ -312,7 +329,13 @@ class PipelineBuilder():
         self.pipe.add(queue)
         self.pipe.sync_children_states()
         start_pad.parent.link(enc)
-        enc.link(payloader)
+        
+        if(self.sdptester.media[encoder_name]['encoder']=='omxh264enc'):
+            enc.link(capsfilter0)
+            capsfilter0.link(payloader)            
+        else:       
+            enc.link(payloader)
+            
         payloader.link(capsfilter)
         capsfilter.link(queue)
         if(end_pad==None):
