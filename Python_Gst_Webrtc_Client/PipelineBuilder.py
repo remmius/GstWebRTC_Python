@@ -25,6 +25,7 @@ MEDIA={
         "VP9":{"encoder":"vp9enc","payloader":"rtpvp9pay","pt":98},
         "OPUS":{"encoder":"opusenc","payloader":"rtpopuspay","pt":111},
         }
+OMX_CODEC="42001f" # baseline,level=3.1
 
 class SDPTester():
     def __init__(self):    
@@ -49,7 +50,7 @@ class SDPTester():
             #TOFIX with videotestsrc a sigsev is caused if capsomx="video/x-h264,level=(string)XX" is defined
             #is level required to be set for encoder or enough to set before fakesink?
             source="v4l2src device=/dev/video0 ! video/x-raw,width=120,height=80,framerate=30/1  ! videoconvert"
-            caps_omx=utilh264. get_omxcaps_from_caps(test_caps.to_string())
+            caps_omx=utilh264.get_omxcaps_from_caps(test_caps.to_string())
             description_pipeline='''{source} ! {encoder} name=encoder ! capsfilter caps="{capsomx}" ! {payloader} ! capsfilter caps="{caps}" ! fakesink name=fakesinktest '''.format(source=source,encoder=encoder,payloader=payloader,capsomx=caps_omx,caps=test_caps.to_string())
         print(description_pipeline)
         self.pipe = Gst.parse_launch(description_pipeline)
@@ -164,7 +165,15 @@ class PipelineBuilder():
     
     def generate_caps(self,media_type,encoder,caps0):
         caps_str='''application/x-rtp, payload=(int){}'''.format(self.get_media()[encoder]['pt'])       
+        if(self.get_media()[encoder]['encoder']=="omxh264enc"):
+            #add a known compatible browser codec for now
+            #TODO: determine the profile-level-id based on the caps produced by the test-pipeline out of caps with profileLevelIdToString: 
+            #e.g. 'profile=(string)high, level=(string)4'
+            #even better use: sprop-parameter-sets with help of GstPbutils
+            caps_str=caps_str+",profile-level-id=(string)"+OMX_CODEC
+            
         capsn= Gst.caps_from_string(caps_str)
+        
         if(self.sdptester.test_pipeline(media_type,encoder,capsn,store_caps="output")):                        
             capsn=self.get_media()[encoder]["caps"]
             if caps0==None:
