@@ -20,7 +20,7 @@
   "dependencies": {
     "ws": "^5.2.4",
     "jsonwebtoken": "^9.0.0",
-    "express": "^4.22.1"
+    "express": "^4.22.2"
   },
   "devDependencies": {}
 }
